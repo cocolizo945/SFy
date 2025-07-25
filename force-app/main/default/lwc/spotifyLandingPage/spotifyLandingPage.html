@@ -1,0 +1,32 @@
+<template>
+    <lightning-card>
+        <div slot="title">
+            Songs
+        </div>
+        <div>
+            <template for:each={newSongs} for:item="song">  
+                <div key ={song.Id}>
+                    <h1>{song.Name}</h1>
+                    <p>{song.release_date__c}</p>
+                </div>
+            </template>
+        </div>
+        
+</lightning-card>
+
+    <lightning-card>
+        <div slot="title">
+            playlist
+        </div>
+        <div>
+            <template for:each={getLastModified} for:item="lastModified">  
+                <div key ={lastModified.Id}>
+                    <h1>{lastModified.Name}</h1>
+                    <p>{lastModified.cant_songs__c}</p>
+                    <p>{lastModified.playtime__c}</p>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+    
+</template>
