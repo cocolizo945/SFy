@@ -1,0 +1,12 @@
+{
+  "type" : "sfdc_cms__route",
+  "title" : "song List",
+  "contentBody" : {
+    "activeViewId" : "song_List",
+    "configurationTags" : [ ],
+    "pageAccess" : "UseParent",
+    "routeType" : "list-Song__c",
+    "urlPrefix" : "song"
+  },
+  "urlName" : "song-list"
+}
