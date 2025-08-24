@@ -10,13 +10,13 @@ trigger PlaylistSongTrigger on Playlist_Song__c (before insert, before update) {
 
     if (Trigger.isUpdate){
         if(Trigger.isBefore){
-            PlaylistHandler.beforeUpdate(Trigger.new, Trigger.oldMap);
+            PlaylistSongHandler.beforeUpdate(Trigger.new, Trigger.oldMap);
         }
     }
 
     if (Trigger.isInsert){
         if(Trigger.isBefore){
-            PlaylistHandler.beforeInsert(Trigger.new);
+            PlaylistSongHandler.beforeInsert(Trigger.new);
         }
     }
    
