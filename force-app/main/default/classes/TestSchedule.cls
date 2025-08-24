@@ -22,15 +22,59 @@
 @isTest
 private class TestSchedule {
 
+    @TestSetup
+    static void makeData(){
+        List<Song__c> songs                 = new List<Song__c>();
+        List<Artist__c> newArtist           = new List<Artist__c>();
+        List<Album__c> newAlbum             = new List<Album__c>();
+        List<Playlist_Song__c> newPlaylist  = new List<Playlist_Song__c>();
 
-    private static Song__c makeSong(String name, Date releaseDate, Boolean isPublic) {
-        Song__c s = new Song__c();
-        s.Name = name;
-        s.Release_Date__c = releaseDate;
-        s.IsPublic__c = isPublic;
-        s.Duration__c = 188;
-        s.Genre__c = 'Pop';
-        return s;
+        newArtist.add(new Artist__c(Name = 'automated test artist'));
+        insert newArtist;
+        
+        newAlbum.add(new Album__c(  Name = 'automated test album',
+                                    ArtistId__c = newArtist[0].Id,
+                                    IsPublic__c = true,
+                                    Release_Date__c = System.today()));            
+        insert newAlbum;
+
+        User_Playlist__c pl = new User_Playlist__c(Name = 'Released Today', IsPublic__c = true);
+        insert pl;
+
+        for(Integer i = 0; i<=2; i++){
+            songs.add(new Song__c(
+                Name = 'test name ' + i,
+                Release_Date__c = System.today(),
+                IsPublic__c = true,
+                ArtistId__c = newArtist[0].Id
+            ));
+            System.debug('song' + i);
+        }
+
+        for(Integer i = 3; i<5; i++){
+            songs.add(new Song__c(
+                Name = 'test name ' + i,
+                Release_Date__c = System.today().addDays(-1),
+                IsPublic__c = true,
+                ArtistId__c = newArtist[0].Id
+            ));
+            System.debug('song' + i);
+        }
+        System.debug(songs);
+        insert songs;
+
+        for(Integer i = 0; i<1; i++){
+            newPlaylist.add(new Playlist_Song__c(
+            PlaylistId__c = pl.Id,
+            SongId__c = songs[3 + i].Id,
+            Duration__c = 120,
+            Genre__c = 'Pop',
+            Name = 'OLD - ' + songs[3 + i].Name
+            ));
+        
+        }
+        insert newPlaylist;
+
     }
 
     private static void scheduleJob() {
@@ -40,37 +84,6 @@ private class TestSchedule {
 
     @IsTest
     static void testCreatesPlaylistAndInsertsTodaysSongs() {
-        Date today = Date.today();
-        Date yesterday = today.addDays(-1);
-
-        List<Song__c> songs = new List<Song__c>{
-            makeSong('Song A (today)', today, true),
-            makeSong('Song B (today)', today, true),
-            makeSong('Song C (today)', today, true),
-            makeSong('Song D (yesterday)', yesterday, true),
-            makeSong('Song E (yesterday)', yesterday, true)
-        };
-        insert songs;
-
-        User_Playlist__c pl = new User_Playlist__c(Name = 'Released Today', IsPublic__c = true);
-        insert pl;
-
-
-        Playlist_Song__c old1 = new Playlist_Song__c(
-            PlaylistId__c = pl.Id,
-            SongId__c = songs[3].Id,
-            Duration__c = 120,
-            Genre__c = 'Pop',
-            Name = 'OLD - ' + songs[3].Name
-        );
-        Playlist_Song__c old2 = new Playlist_Song__c(
-            PlaylistId__c = pl.Id,
-            SongId__c = songs[4].Id,
-            Duration__c = 130,
-            Genre__c = 'Pop',
-            Name = 'OLD - ' + songs[4].Name
-        );
-        insert new List<Playlist_Song__c>{ old1, old2 };
 
         Test.startTest();
         scheduleJob();
@@ -96,29 +109,8 @@ private class TestSchedule {
 
     @IsTest
     static void testNoTodaysSongsLeavesPlaylistEmpty() {
-        Date today = Date.today();
-        Date yesterday = today.addDays(-1);
-
-        
-        insert new List<Song__c>{
-            makeSong('Old 1', yesterday, true),
-            makeSong('Old 2', yesterday, true)
-        };
-
-        
-        User_Playlist__c pl = new User_Playlist__c(Name = 'Released Today', IsPublic__c = true);
-        insert pl;
-
-        Song__c dummy = makeSong('Dummy', yesterday, true);
-        insert dummy;
-
-        insert new Playlist_Song__c(
-            PlaylistId__c = pl.Id,
-            SongId__c = dummy.Id,
-            Duration__c = 142,
-            Genre__c = 'Pop',
-            Name = 'OLD - Dummy'
-        );
+        List<Song__c> todays = [SELECT Id FROM Song__c WHERE Release_Date__c = :System.today()];
+        delete todays;
 
         Test.startTest();
         scheduleJob();
@@ -138,7 +130,6 @@ private class TestSchedule {
             WHERE PlaylistId__c = :plAfter.Id
         ];
 
-        
         System.assertEquals(0, countLinks, 'if there is no recently released, the playlist is empty');
         
     }
