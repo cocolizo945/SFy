@@ -1,3 +1,10 @@
+/**
+ * @description       : 
+ * @author            : Eduardo Mendez Miranda
+ * @group             : 
+ * @last modified on  : 08-18-2025
+ * @last modified by  : Eduardo Mendez Miranda
+**/
 public with sharing class PlaylistSongHandler {
 
     public static void beforeInsert(List<Playlist_Song__c> newList) {
@@ -40,7 +47,7 @@ public with sharing class PlaylistSongHandler {
 
                 if (!Trigger.isUpdate || (ps.PlaylistId__c != oldPS.PlaylistId__c || ps.SongId__c != oldPS.SongId__c)){
                     if (existingKeys.containsKey(key) && existingKeys.get(key) != ps.Id){
-                        ps.addError('Esta cancion ya existe en la playlist.');
+                        ps.addError('Song already exist in Playlist.');
                     }
                 }
             }
