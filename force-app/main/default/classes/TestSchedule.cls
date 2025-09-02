@@ -25,56 +25,51 @@ private class TestSchedule {
     @TestSetup
     static void makeData(){
         List<Song__c> songs                 = new List<Song__c>();
-        List<Artist__c> newArtist           = new List<Artist__c>();
-        List<Album__c> newAlbum             = new List<Album__c>();
-        List<Playlist_Song__c> newPlaylist  = new List<Playlist_Song__c>();
-
-        newArtist.add(new Artist__c(Name = 'automated test artist'));
-        insert newArtist;
         
-        newAlbum.add(new Album__c(  Name = 'automated test album',
-                                    ArtistId__c = newArtist[0].Id,
-                                    IsPublic__c = true,
-                                    Release_Date__c = System.today()));            
-        insert newAlbum;
+        Artist__c testArtist = new Artist__c(Name = 'automated test artist');
+        insert testArtist;
+        
+        Album__c testAlbum = new Album__c(Name = 'automated test album',
+                                 ArtistId__c = testArtist.Id,
+                                 IsPublic__c = true,
+                                 Release_Date__c = System.today());
+        insert testAlbum;
 
-        User_Playlist__c pl = new User_Playlist__c(Name = 'Released Today', IsPublic__c = true);
-        insert pl;
+        User_Playlist__c testPlaylist = new User_Playlist__c(Name = 'Released Today', IsPublic__c = true);
+        insert testPlaylist;
 
         for(Integer i = 0; i<=2; i++){
             songs.add(new Song__c(
                 Name = 'test name ' + i,
                 Release_Date__c = System.today(),
                 IsPublic__c = true,
-                ArtistId__c = newArtist[0].Id
+                ArtistId__c = testArtist.Id
             ));
-            System.debug('song' + i);
         }
 
-        for(Integer i = 3; i<5; i++){
+        for(Integer i = 0; i<2; i++){
             songs.add(new Song__c(
                 Name = 'test name ' + i,
                 Release_Date__c = System.today().addDays(-1),
                 IsPublic__c = true,
-                ArtistId__c = newArtist[0].Id
+                ArtistId__c = testArtist.Id
             ));
-            System.debug('song' + i);
+
         }
-        System.debug(songs);
         insert songs;
 
-        for(Integer i = 0; i<1; i++){
-            newPlaylist.add(new Playlist_Song__c(
-            PlaylistId__c = pl.Id,
-            SongId__c = songs[3 + i].Id,
-            Duration__c = 120,
-            Genre__c = 'Pop',
-            Name = 'OLD - ' + songs[3 + i].Name
-            ));
-        
+        for (Song__c song : songs) {
+            if (song.Release_Date__c == System.today().addDays(-1)) {
+                Playlist_Song__c testPlaylistSong = new Playlist_Song__c(
+                    PlaylistId__c = testPlaylist.Id,
+                    SongId__c = song.Id,
+                    Duration__c = 120,
+                    Genre__c = 'Pop',
+                    Name = 'OLD - ' + song.Name
+                );
+                insert testPlaylistSong;
+            }
         }
-        insert newPlaylist;
-
     }
 
     private static void scheduleJob() {
@@ -94,7 +89,8 @@ private class TestSchedule {
             WHERE Name = 'Released Today'
             LIMIT 1
         ];
-        System.assertNotEquals(null, plAfter, 'Playlists Released Today exist');
+        
+        Assert.areNotEqual(null, plAfter, 'Playlists Released Today exist');
 
         List<Playlist_Song__c> links = [
             SELECT Id, PlaylistId__c, SongId__c, Name
@@ -103,7 +99,7 @@ private class TestSchedule {
             ORDER BY Name
         ];
 
-        System.assertEquals(3, links.size(), '3 songs for today must exist on the playlist');
+        Assert.areEqual(3, links.size(), '3 songs for today must exist on the playlist');
 
     }
 
@@ -122,7 +118,7 @@ private class TestSchedule {
             WHERE Name = 'Released Today'
             LIMIT 1
         ];
-        System.assertNotEquals(null, plAfter, 'the playlist Released Today must exist');
+        Assert.areNotEqual(null, plAfter, 'the playlist Released Today must exist');
 
         Integer countLinks = [
             SELECT COUNT()
@@ -130,7 +126,6 @@ private class TestSchedule {
             WHERE PlaylistId__c = :plAfter.Id
         ];
 
-        System.assertEquals(0, countLinks, 'if there is no recently released, the playlist is empty');
-        
+        Assert.areEqual(0, countLinks, 'playlist isnt empty');
     }
 }
