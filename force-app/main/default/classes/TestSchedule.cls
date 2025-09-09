@@ -24,7 +24,8 @@ private class TestSchedule {
 
     @TestSetup
     static void makeData(){
-        List<Song__c> songs                 = new List<Song__c>();
+        List<Song__c> songs                     = new List<Song__c>();
+        List<Playlist_Song__c> testPlaylistSong = new List<Playlist_Song__c>();
         
         Artist__c testArtist = new Artist__c(Name = 'automated test artist');
         insert testArtist;
@@ -60,16 +61,17 @@ private class TestSchedule {
 
         for (Song__c song : songs) {
             if (song.Release_Date__c == System.today().addDays(-1)) {
-                Playlist_Song__c testPlaylistSong = new Playlist_Song__c(
+                testPlaylistSong.add(new Playlist_Song__c(
                     PlaylistId__c = testPlaylist.Id,
                     SongId__c = song.Id,
                     Duration__c = 120,
                     Genre__c = 'Pop',
                     Name = 'OLD - ' + song.Name
-                );
-                insert testPlaylistSong;
+                ));
+                
             }
         }
+        insert testPlaylistSong;
     }
 
     private static void scheduleJob() {

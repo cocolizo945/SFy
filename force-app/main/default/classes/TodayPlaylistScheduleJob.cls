@@ -2,12 +2,18 @@
  * @description       : 
  * @author            : Eduardo Mendez Miranda
  * @group             : 
- * @last modified on  : 09-01-2025
+ * @last modified on  : 09-08-2025
  * @last modified by  : Eduardo Mendez Miranda
 **/
 public with sharing class TodayPlaylistScheduleJob implements Schedulable{
     public void execute(SchedulableContext sc) {
-        updateReleasedTodayPlaylist();
+        
+        try {
+            updateReleasedTodayPlaylist();    
+        } catch (Exception e ) {
+             System.debug('Error in Scheduled Job updateReleasedTodayPlaylist: ' + e.getMessage());
+            System.debug('Stack Trace: ' + e.getStackTraceString());
+        }
     }
 
     private void updateReleasedTodayPlaylist() {
@@ -16,18 +22,18 @@ public with sharing class TodayPlaylistScheduleJob implements Schedulable{
          Map<Id, Song__c> todaysSongsMap = SongsSelector.getTodaysPublicSongsMap();
 
         //check if the playlist released today exist
-        User_Playlist__c releasedTodayPlaylist = UserPlaylistSelector.getPlaylistByName('Released Today');
+        List<User_Playlist__c> releasedTodayPlaylist = UserPlaylistSelector.getPlaylistByName('Released Today');
 
         if (releasedTodayPlaylist == null) {
-                releasedTodayPlaylist = new User_Playlist__c(
+                releasedTodayPlaylist.add(new User_Playlist__c(
                     Name = 'Released Today',
                     IsPublic__c = TRUE
-                );
+                ));
                 insert releasedTodayPlaylist;
             }
 
         // get old links and delete them
-        List<Playlist_Song__c> oldLinks = PlaylistSongSelector.getByPlaylist(releasedTodayPlaylist.Id);
+        List<Playlist_Song__c> oldLinks = PlaylistSongSelector.getByPlaylist(releasedTodayPlaylist[0].Id);
         
         if (!oldLinks.isEmpty()) {
             delete oldLinks;
@@ -37,19 +43,19 @@ public with sharing class TodayPlaylistScheduleJob implements Schedulable{
         if (!todaysSongsMap.isEmpty()) {
             List<Playlist_Song__c> songsToInsert = new List<Playlist_Song__c>();
 
-               for (Song__c s : todaysSongsMap.values()) {
+               for (Song__c song : todaysSongsMap.values()) {
                 songsToInsert.add(new Playlist_Song__c(
-                    PlaylistId__c = releasedTodayPlaylist.Id,
-                    SongId__c = s.Id,
-                    Duration__c = s.Duration__c,
-                    Genre__c = s.Genre__c,
-                    Name = s.Name
+                    PlaylistId__c = releasedTodayPlaylist[0].Id,
+                    SongId__c = song.Id,
+                    Duration__c = song.Duration__c,
+                    Genre__c = song.Genre__c,
+                    Name = song.Name
                 ));
             }
             
-            if (!songsToInsert.isEmpty()) {
+            
                 insert songsToInsert; 
-            }
+            
         }
     }
 }
