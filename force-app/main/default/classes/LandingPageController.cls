@@ -2,7 +2,7 @@
  * @description       : 
  * @author            : Eduardo Mendez Miranda
  * @group             : 
- * @last modified on  : 08-24-2025
+ * @last modified on  : 09-08-2025
  * @last modified by  : Eduardo Mendez Miranda
 **/
 public with sharing class LandingPageController {
@@ -16,7 +16,7 @@ public with sharing class LandingPageController {
     @AuraEnabled
     public static List<Song__c> getUpcommingSongs() {
         try {
-            return SongService.getUpcommingSongs();
+            return SongsSelector.getSongsReleasedLast15Days();
         } catch (Exception e) {
             throw new AuraHandledException('an error occurred while performing this operation');
         }
